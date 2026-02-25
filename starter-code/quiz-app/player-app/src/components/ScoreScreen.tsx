@@ -1,42 +1,27 @@
-// ============================================================
-// ScoreScreen - Classement avec position du joueur
-// A IMPLEMENTER : leaderboard avec mise en surbrillance
-// ============================================================
-
-interface ScoreScreenProps {
-  /** Classement trie par score decroissant */
+interface Props {
   rankings: { name: string; score: number }[]
-  /** Nom du joueur actuel (pour le mettre en surbrillance) */
   playerName: string
 }
 
-/**
- * Composant affichant le classement avec la position du joueur en surbrillance.
- *
- * Ce qu'il faut implementer :
- * - Un titre "Classement" (classe .leaderboard-title)
- * - La liste ordonnee des joueurs (classe .leaderboard)
- * - Chaque joueur est dans un .leaderboard-item
- *   Si c'est le joueur actuel, ajouter aussi la classe .is-me
- * - Afficher pour chaque joueur :
- *   - Son rang (1, 2, 3...) dans .leaderboard-rank
- *   - Son nom dans .leaderboard-name
- *   - Son score dans .leaderboard-score
- *
- * Classes CSS disponibles : .score-screen, .leaderboard-title, .leaderboard,
- * .leaderboard-item, .is-me, .leaderboard-rank, .leaderboard-name, .leaderboard-score
- */
-function ScoreScreen({ rankings, playerName }: ScoreScreenProps) {
+export default function ScoreScreen({ rankings, playerName }: Props) {
   return (
-    <div className="phase-container score-screen">
-      {/* TODO: Titre "Classement" avec .leaderboard-title */}
+    <div className="score-screen">
+      <h2 className="leaderboard-title">Classement</h2>
       <div className="leaderboard">
-        {/* TODO: Pour chaque joueur dans rankings, afficher un .leaderboard-item */}
-        {/* TODO: Ajouter la classe .is-me si ranking.name === playerName */}
-        {/* TODO: Afficher rang, nom et score */}
+        {rankings.map((entry, i) => {
+          const isMe = entry.name === playerName
+          return (
+            <div key={i} className={`leaderboard-item${isMe ? ' is-me' : ''}`}>
+              <span className="leaderboard-rank">{i + 1}</span>
+              <span className="leaderboard-name">
+                {entry.name}
+                {isMe && ' (vous)'}
+              </span>
+              <span className="leaderboard-score">{entry.score} pts</span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
 }
-
-export default ScoreScreen

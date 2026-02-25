@@ -1,32 +1,19 @@
-// ============================================================
-// WaitingLobby - Ecran d'attente pour les joueurs
-// A IMPLEMENTER : message d'attente et liste des joueurs
-// ============================================================
-
-interface WaitingLobbyProps {
-  /** Liste des noms de joueurs connectes */
+interface Props {
   players: string[]
 }
 
-/**
- * Composant ecran d'attente affiche cote joueur apres avoir rejoint.
- *
- * Ce qu'il faut implementer :
- * - Un message "En attente du host..." (classe .waiting-message)
- * - Le nombre de joueurs connectes
- * - La liste des joueurs (puces avec classe .player-chip dans un .player-list)
- *
- * Classes CSS disponibles : .waiting-container, .waiting-message,
- * .player-list, .player-chip
- */
-function WaitingLobby({ players }: WaitingLobbyProps) {
+export default function WaitingLobby({ players }: Props) {
   return (
-    <div className="phase-container waiting-container">
-      {/* TODO: Message "En attente du host..." avec .waiting-message */}
-      {/* TODO: Nombre de joueurs */}
-      {/* TODO: Liste des joueurs avec .player-list et .player-chip */}
+    <div className="waiting-container">
+      <p className="waiting-message">En attente du host...</p>
+      <p style={{ color: '#94a3b8', marginBottom: '0.5rem' }}>
+        {players.length} joueur{players.length !== 1 ? 's' : ''} connecte{players.length !== 1 ? 's' : ''}
+      </p>
+      <div className="player-list">
+        {players.map((name, i) => (
+          <span key={i} className="player-chip">{name}</span>
+        ))}
+      </div>
     </div>
   )
 }
-
-export default WaitingLobby
