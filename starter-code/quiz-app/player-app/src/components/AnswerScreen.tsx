@@ -1,54 +1,39 @@
-// ============================================================
-// AnswerScreen - Boutons de reponse colores
-// A IMPLEMENTER : question, timer, 4 boutons colores
-// ============================================================
-
-import { useState } from 'react'
 import type { QuizQuestion } from '@shared/index'
 
-interface AnswerScreenProps {
-  /** La question en cours (sans correctIndex) */
+interface Props {
   question: Omit<QuizQuestion, 'correctIndex'>
-  /** Temps restant en secondes */
   remaining: number
-  /** Callback quand le joueur clique sur un choix */
   onAnswer: (choiceIndex: number) => void
-  /** Si true, le joueur a deja repondu */
   hasAnswered: boolean
+  selectedIndex: number | null
 }
 
-/**
- * Composant affichant la question et les boutons de reponse colores.
- *
- * Ce qu'il faut implementer :
- * - Le temps restant (classe .answer-timer)
- *   Ajouter la classe .warning si remaining <= 10, .danger si remaining <= 3
- * - Le texte de la question (classe .answer-question)
- * - 4 boutons colores dans une grille (classes .answer-grid, .answer-btn)
- *   Les couleurs sont gerees automatiquement par :nth-child dans le CSS
- * - Tous les boutons sont desactives (disabled) si hasAnswered est true
- * - Optionnel : ajouter la classe .selected au bouton choisi
- * - Si le joueur a repondu, afficher "Reponse envoyee !" (classe .answered-message)
- *
- * Classes CSS disponibles : .answer-screen, .answer-timer, .warning, .danger,
- * .answer-question, .answer-grid, .answer-btn, .selected, .answered-message
- */
-function AnswerScreen({ question, remaining, onAnswer, hasAnswered }: AnswerScreenProps) {
-  // TODO: State optionnel pour stocker l'index du choix selectionne
-
-  const handleClick = (index: number) => {
-    // TODO: Appeler onAnswer(index)
-    // TODO: Optionnel : sauvegarder l'index selectionne pour le style .selected
-  }
+export default function AnswerScreen({ question, remaining, onAnswer, hasAnswered, selectedIndex }: Props) {
+  const timerClass =
+    remaining <= 3 ? 'danger' :
+    remaining <= 7 ? 'warning' : ''
 
   return (
     <div className="answer-screen">
-      {/* TODO: Timer avec .answer-timer (+ .warning / .danger selon remaining) */}
-      {/* TODO: Texte de la question avec .answer-question */}
-      {/* TODO: Grille de 4 boutons avec .answer-grid et .answer-btn */}
-      {/* TODO: Message "Reponse envoyee !" si hasAnswered */}
+      <p className={`answer-timer ${timerClass}`}>{remaining}s</p>
+      <p className="answer-question">{question.text}</p>
+
+      <div className="answer-grid">
+        {question.choices.map((choice, i) => (
+          <button
+            key={i}
+            className={`answer-btn${selectedIndex === i ? ' selected' : ''}`}
+            onClick={() => onAnswer(i)}
+            disabled={hasAnswered}
+          >
+            {choice}
+          </button>
+        ))}
+      </div>
+
+      {hasAnswered && (
+        <p className="answered-message">Reponse envoyee !</p>
+      )}
     </div>
   )
 }
-
-export default AnswerScreen
