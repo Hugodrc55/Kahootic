@@ -53,11 +53,17 @@ wss.on('connection', (ws: WebSocket) => {
       // Un joueur veut rejoindre un quiz
       // ============================================================
       case 'join': {
-        // TODO: Recuperer la salle avec message.quizCode depuis la map rooms
-        // TODO: Si la salle n'existe pas, envoyer une erreur
-        // TODO: Si la salle n'est pas en phase 'lobby', envoyer une erreur
-        // TODO: Appeler room.addPlayer(message.name, ws)
-        // TODO: Stocker l'association ws -> { room, playerId } dans clientRoomMap
+        const room = rooms.get(message.quizCode)
+        if (!room) {
+          send(ws, { type: 'error', message: 'Quiz introuvable' })
+          return
+        }
+        if (room.phase !== 'lobby') {
+          send(ws, { type: 'error', message: 'Le quiz a deja commence' })
+          return
+        }
+        const playerId = room.addPlayer(message.name, ws)
+        clientRoomMap.set(ws, { room, playerId })
         break
       }
 
@@ -65,9 +71,12 @@ wss.on('connection', (ws: WebSocket) => {
       // Un joueur envoie sa reponse
       // ============================================================
       case 'answer': {
-        // TODO: Recuperer le { room, playerId } depuis clientRoomMap
-        // TODO: Si non trouve, envoyer une erreur
-        // TODO: Appeler room.handleAnswer(playerId, message.choiceIndex)
+        const entry = clientRoomMap.get(ws)
+        if (!entry) {
+          send(ws, { type: 'error', message: 'Non connecte a un quiz' })
+          return
+        }
+        entry.room.handleAnswer(entry.playerId, message.choiceIndex)
         break
       }
 
@@ -75,12 +84,14 @@ wss.on('connection', (ws: WebSocket) => {
       // Le host cree un nouveau quiz
       // ============================================================
       case 'host:create': {
-        // TODO: Generer un code unique avec generateQuizCode()
-        // TODO: Creer une nouvelle QuizRoom (id = Date.now().toString(), code)
-        // TODO: Assigner hostWs, title, questions sur la room
-        // TODO: Stocker la room dans rooms (cle = code)
-        // TODO: Stocker l'association host ws -> room dans hostRoomMap
-        // TODO: Envoyer un message sync au host : { type: 'sync', phase: 'lobby', data: { quizCode: code } }
+        const code = generateQuizCode()
+        const room = new QuizRoom(Date.now().toString(), code)
+        room.hostWs = ws
+        room.title = message.title
+        room.questions = message.questions
+        rooms.set(code, room)
+        hostRoomMap.set(ws, room)
+        send(ws, { type: 'sync', phase: 'lobby', data: { quizCode: code } })
         console.log(`[Server] Quiz cree avec le code: ???`)
         break
       }
