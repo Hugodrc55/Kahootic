@@ -1,43 +1,14 @@
-// ============================================================
-// Hook useWebSocket - Ce fichier est COMPLET
-// Auto-reconnexion avec backoff exponentiel
-// ============================================================
-
 import { useEffect, useRef, useState, useCallback } from 'react'
 import type { ClientMessage, ServerMessage } from '@shared/index'
 
 type ConnectionStatus = 'connecting' | 'connected' | 'disconnected'
 
 interface UseWebSocketReturn {
-  /** Etat actuel de la connexion */
   status: ConnectionStatus
-  /** Envoie un message au serveur */
   sendMessage: (message: ClientMessage) => void
-  /** Dernier message recu du serveur */
   lastMessage: ServerMessage | null
 }
 
-/**
- * Hook React pour gerer une connexion WebSocket avec auto-reconnexion.
- *
- * @param url - URL du serveur WebSocket (ex: "ws://localhost:3001")
- * @returns Objet avec status, sendMessage et lastMessage
- *
- * @example
- * ```tsx
- * const { status, sendMessage, lastMessage } = useWebSocket('ws://localhost:3001')
- *
- * useEffect(() => {
- *   if (lastMessage?.type === 'joined') {
- *     setPlayers(lastMessage.players)
- *   }
- * }, [lastMessage])
- *
- * const handleJoin = () => {
- *   sendMessage({ type: 'join', quizCode: 'ABC123', name: 'Alice' })
- * }
- * ```
- */
 export function useWebSocket(url: string): UseWebSocketReturn {
   const [status, setStatus] = useState<ConnectionStatus>('disconnected')
   const [lastMessage, setLastMessage] = useState<ServerMessage | null>(null)
@@ -47,12 +18,11 @@ export function useWebSocket(url: string): UseWebSocketReturn {
   const reconnectAttemptRef = useRef(0)
   const unmountedRef = useRef(false)
 
-  const MAX_RECONNECT_DELAY = 30000 // 30 secondes max
+  const MAX_RECONNECT_DELAY = 30000
 
   const connect = useCallback(() => {
     if (unmountedRef.current) return
 
-    // Nettoyer la connexion precedente
     if (wsRef.current) {
       wsRef.current.close()
       wsRef.current = null
@@ -68,7 +38,6 @@ export function useWebSocket(url: string): UseWebSocketReturn {
         ws.close()
         return
       }
-      console.log('[useWebSocket] Connecte')
       setStatus('connected')
       reconnectAttemptRef.current = 0
     }
@@ -84,16 +53,13 @@ export function useWebSocket(url: string): UseWebSocketReturn {
 
     ws.onclose = () => {
       if (unmountedRef.current) return
-      console.log('[useWebSocket] Deconnecte')
       setStatus('disconnected')
       wsRef.current = null
 
-      // Reconnexion avec backoff exponentiel : 1s, 2s, 4s, 8s... max 30s
       const delay = Math.min(
         1000 * Math.pow(2, reconnectAttemptRef.current),
         MAX_RECONNECT_DELAY
       )
-      console.log(`[useWebSocket] Reconnexion dans ${delay}ms...`)
       reconnectAttemptRef.current += 1
 
       reconnectTimeoutRef.current = setTimeout(() => {
@@ -105,11 +71,9 @@ export function useWebSocket(url: string): UseWebSocketReturn {
 
     ws.onerror = (event: Event) => {
       console.error('[useWebSocket] Erreur:', event)
-      // onclose sera appele automatiquement apres onerror
     }
   }, [url])
 
-  // Connexion initiale et cleanup
   useEffect(() => {
     unmountedRef.current = false
     connect()
