@@ -110,9 +110,12 @@ wss.on('connection', (ws: WebSocket) => {
       // Le host passe a la question suivante
       // ============================================================
       case 'host:next': {
-        // TODO: Recuperer la room depuis hostRoomMap
-        // TODO: Si non trouvee, envoyer une erreur
-        // TODO: Appeler room.nextQuestion()
+        const room = hostRoomMap.get(ws)
+        if (!room) {
+          send(ws, { type: 'error', message: 'Aucun quiz actif' })
+          return
+        }
+        room.nextQuestion()
         break
       }
 
@@ -120,11 +123,19 @@ wss.on('connection', (ws: WebSocket) => {
       // Le host termine le quiz
       // ============================================================
       case 'host:end': {
-        // TODO: Recuperer la room depuis hostRoomMap
-        // TODO: Si non trouvee, envoyer une erreur
-        // TODO: Appeler room.end()
-        // TODO: Supprimer la room de rooms
-        // TODO: Nettoyer hostRoomMap et clientRoomMap
+        const room = hostRoomMap.get(ws)
+        if (!room) {
+          send(ws, { type: 'error', message: 'Aucun quiz actif' })
+          return
+        }
+        room.end()
+        rooms.delete(room.code)
+        hostRoomMap.delete(ws)
+        for (const [clientWs, entry] of clientRoomMap.entries()) {
+          if (entry.room === room) {
+            clientRoomMap.delete(clientWs)
+          }
+        }
         break
       }
 
@@ -137,9 +148,8 @@ wss.on('connection', (ws: WebSocket) => {
   // --- Gestion de la deconnexion ---
   ws.on('close', () => {
     console.log('[Server] Connexion fermee')
-
-    // TODO: Nettoyer clientRoomMap si c'etait un joueur
-    // TODO: Nettoyer hostRoomMap si c'etait un host
+    clientRoomMap.delete(ws)
+    hostRoomMap.delete(ws)
   })
 
   ws.on('error', (err: Error) => {
